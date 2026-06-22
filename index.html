@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PR Tracker (View Only)</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --surface2: #1e2333;
+    --border: #2a2f45;
+    --accent: #4f7ef8;
+    --text: #e8eaf6;
+    --muted: #7880a0;
+    --mono: 'Cascadia Code', 'Fira Mono', monospace;
+    --s-l1: #4f7ef8;
+    --s-l2: #7c5cfc;
+    --s-l3: #f4a623;
+    --s-l4: #e05c6e;
+    --s-dhaca: #2ecba1;
+    --s-done: #3dd68c;
+    --s-pending: #7880a0;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; min-height: 100vh; }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 18px 32px; }
+  header h1 { font-size: 18px; font-weight: 600; color: var(--text); }
+  .table-wrap { padding: 32px; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 10px; border: 1px solid var(--border); }
+  thead th { background: var(--surface2); color: var(--muted); font-size: 11px; text-transform: uppercase; padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  td { padding: 12px 16px; color: var(--text); }
+  .pr-num { font-family: var(--mono); color: var(--accent); font-weight: 600; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .b-l1    { background: rgba(79,126,248,0.15); color: var(--s-l1); border: 1px solid rgba(79,126,248,0.3); }
+  .b-l2    { background: rgba(124,92,252,0.15); color: var(--s-l2); border: 1px solid rgba(124,92,252,0.3); }
+  .b-l3    { background: rgba(244,166,35,0.15); color: var(--s-l3); border: 1px solid rgba(244,166,35,0.3); }
+  .b-l4    { background: rgba(224,92,110,0.15); color: var(--s-l4); border: 1px solid rgba(224,92,110,0.3); }
+  .b-dhaca { background: rgba(46,203,161,0.15); color: var(--s-dhaca); border: 1px solid rgba(46,203,161,0.3); }
+  .b-done  { background: rgba(61,214,140,0.15); color: var(--s-done); border: 1px solid rgba(61,214,140,0.3); }
+  .b-pending { background: rgba(120,128,160,0.15); color: var(--s-pending); border: 1px solid rgba(120,128,160,0.3); }
+</style>
+</head>
+<body>
+
+<header><h1>PR <span>Tracker (Read-Only)</span></h1></header>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>PR #</th>
+        <th>Vendor</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<script>
+const STATUS_CLASS = {
+  'L1 - DETR': 'b-l1',
+  'L2 - ITD':  'b-l2',
+  'L3 - EMD':  'b-l3',
+  'L4 - RM':   'b-l4',
+  'DHACA':     'b-dhaca',
+  'Done':      'b-done',
+  'Pending':   'b-pending',
+};
+
+async function loadFromGitHub() {
+  try {
+    const response = await fetch('data.json?t=' + new Date().getTime());
+    const prs = await response.json();
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = prs.map(p => `
+      <tr>
+        <td><span class="pr-num">${p.pr_number}</span></td>
+        <td>${p.vendor}</td>
+        <td>${p.description}</td>
+        <td><span class="badge ${STATUS_CLASS[p.status] || 'b-pending'}">${p.status}</span></td>
+        <td>${p.notes || '—'}</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+loadFromGitHub();
+setInterval(loadFromGitHub, 30000);
+</script>
+
+</body>
+</html>
